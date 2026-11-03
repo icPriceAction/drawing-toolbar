@@ -2,7 +2,7 @@
 // Tool Name:    icPA - Drawing Toolbar
 // Class:        icPADrawingToolbar
 // Category:     Indicator
-// Version:      1.0.2
+// Version:      1.1.0
 // Platform:     NinjaTrader 8.1+
 // Author:       Istvan Cebrian
 // Brand:        icPriceAction
@@ -20,7 +20,11 @@
 //               all hand-made drawings on the chart.
 //
 // Changelog:
-//   v1.0.2 (2026-11-03) - Initial public release. Cleaned and optimized by icPriceAction.
+//   v1.1.0 (2026-11-03) - Initial public release. Cleaned and optimized by icPriceAction.
+//                       - New: saved tool setups in "Configure tools..." (load, save under a name, save as default, delete),
+//                         stored outside the workspace in Documents\NinjaTrader 8\templates\icPA\DrawingToolbar.
+//                       - New: toolbars added to a chart start with the setup saved as Default; pressing OK also keeps a "Last used" setup.
+//                       - Toolbar settings are now copied after NinjaTrader's own copy, so they always win when indicators are reloaded.
 //                       - Renamed to icPADrawingToolbar (icPA folder); settings grouped under "1. General".
 //                       - Fix: a saved hidden state is no longer re-applied while the hide/show button is turned off.
 //                       - Fix: all UI cleanup on removal now runs on the UI thread (no race with drag/resize handlers); mouse capture released.
@@ -73,7 +77,7 @@ namespace NinjaTrader.NinjaScript.Indicators.icPA
 	[CategoryOrder(typeof(Custom.Resource), "NinjaScriptIndicatorVisualGroup", 4)]
 	public class icPADrawingToolbar : Indicator
 	{
-		public const string Version = "1.0.2";
+		public const string Version = "1.1.0";
 
 		private const char		ToolListSeparator	= ';';
 		private const char		HiddenTagSeparator	= '\n';
@@ -119,19 +123,9 @@ namespace NinjaTrader.NinjaScript.Indicators.icPA
 				PaintPriceMarkers			= false;
 				IsSuspendedWhileInactive	= true;
 
-				ToolList = string.Join(ToolListSeparator.ToString(), new[]
-				{
-					typeof(DrawingTools.Line).FullName,
-					typeof(DrawingTools.Ray).FullName,
-					typeof(DrawingTools.ExtendedLine).FullName,
-					typeof(DrawingTools.HorizontalLine).FullName,
-					typeof(DrawingTools.VerticalLine).FullName,
-					typeof(DrawingTools.FibonacciRetracements).FullName,
-					typeof(DrawingTools.FibonacciExtensions).FullName,
-					typeof(DrawingTools.Rectangle).FullName,
-					typeof(DrawingTools.Ellipse).FullName,
-					typeof(DrawingTools.Text).FullName
-				});
+				// The setup saved as Default, or the built-in list. A toolbar loaded from a workspace or template
+				// replaces this with its own saved list right after SetDefaults.
+				ToolList = GetStartupToolList();
 
 				DockInToolbar			= true;
 				ToolbarOffset			= 20;
@@ -227,6 +221,9 @@ namespace NinjaTrader.NinjaScript.Indicators.icPA
 
 		public override void CopyTo(NinjaScript ninjaScript)
 		{
+			// NinjaTrader's own copy runs first, so the toolbar's state set below always wins.
+			base.CopyTo(ninjaScript);
+
 			icPADrawingToolbar other = ninjaScript as icPADrawingToolbar;
 			if (other != null)
 			{
@@ -236,7 +233,6 @@ namespace NinjaTrader.NinjaScript.Indicators.icPA
 				other.DrawingsHidden	= DrawingsHidden;
 				other.HiddenDrawingTags	= HiddenDrawingTags;
 			}
-			base.CopyTo(ninjaScript);
 		}
 
 		// Runs a UI action and logs any error to the Output window instead of letting it escape on the UI thread.
@@ -893,16 +889,187 @@ namespace NinjaTrader.NinjaScript.Indicators.icPA
 		// The selected tools in their saved order. Unknown or duplicate entries are ignored.
 		private List<ToolInfo> GetSelectedTools(Dictionary<string, ToolInfo> catalog)
 		{
+			int missing;
+			return ParseToolList(ToolList, catalog, out missing);
+		}
+
+		// Turns a ';'-separated list of type names into tools, in order. Counts entries for tools that aren't installed.
+		private static List<ToolInfo> ParseToolList(string list, Dictionary<string, ToolInfo> catalog, out int missing)
+		{
 			List<ToolInfo>	result	= new List<ToolInfo>();
 			HashSet<string>	seen	= new HashSet<string>(StringComparer.Ordinal);
+			missing					= 0;
 
-			foreach (string raw in (ToolList ?? string.Empty).Split(ToolListSeparator))
+			foreach (string raw in (list ?? string.Empty).Split(ToolListSeparator))
 			{
 				string		name = raw.Trim();
 				ToolInfo	tool;
-				if (name.Length > 0 && seen.Add(name) && catalog.TryGetValue(name, out tool))
+				if (name.Length == 0 || !seen.Add(name))
+					continue;
+				if (catalog.TryGetValue(name, out tool))
 					result.Add(tool);
+				else
+					missing++;
 			}
+
+			return result;
+		}
+
+		#endregion
+
+		#region Saved setups
+
+		// Saved setups are small text files (one drawing tool type per line) in Documents\NinjaTrader 8\templates\icPA\DrawingToolbar.
+		// They live outside the workspace, so they survive an unsaved workspace, a removed toolbar or a new chart,
+		// and they are included in NinjaTrader's own backups of the templates folder.
+		private const string	PresetDefault	= "Default";
+		private const string	PresetLastUsed	= "Last used";
+		private const string	PresetBuiltIn	= "Built-in";
+		private const string	PresetExtension	= ".txt";
+
+		private static readonly object	presetSync = new object();
+		private static string			cachedStartupToolList;
+
+		private static string BuiltInToolList
+		{
+			get
+			{
+				return string.Join(ToolListSeparator.ToString(), new[]
+				{
+					typeof(DrawingTools.Line).FullName,
+					typeof(DrawingTools.Ray).FullName,
+					typeof(DrawingTools.ExtendedLine).FullName,
+					typeof(DrawingTools.HorizontalLine).FullName,
+					typeof(DrawingTools.VerticalLine).FullName,
+					typeof(DrawingTools.FibonacciRetracements).FullName,
+					typeof(DrawingTools.FibonacciExtensions).FullName,
+					typeof(DrawingTools.Rectangle).FullName,
+					typeof(DrawingTools.Ellipse).FullName,
+					typeof(DrawingTools.Text).FullName
+				});
+			}
+		}
+
+		private static string PresetFolder
+		{
+			get { return System.IO.Path.Combine(NinjaTrader.Core.Globals.UserDataDir, "templates", "icPA", "DrawingToolbar"); }
+		}
+
+		private static string PresetPath(string name)
+		{
+			return System.IO.Path.Combine(PresetFolder, name + PresetExtension);
+		}
+
+		// Read once per NinjaScript load and cached, because SetDefaults runs often (e.g. for every entry in the Indicators window).
+		private static string GetStartupToolList()
+		{
+			lock (presetSync)
+			{
+				if (cachedStartupToolList == null)
+				{
+					string saved = null;
+					try { saved = ReadPresetToolList(PresetDefault); }
+					catch { saved = null; }
+
+					cachedStartupToolList = string.IsNullOrWhiteSpace(saved) ? BuiltInToolList : saved;
+				}
+				return cachedStartupToolList;
+			}
+		}
+
+		private static string NormalizePresetName(string name)
+		{
+			name = (name ?? string.Empty).Trim();
+			foreach (string reserved in new[] { PresetDefault, PresetLastUsed, PresetBuiltIn })
+				if (string.Equals(name, reserved, StringComparison.OrdinalIgnoreCase))
+					return reserved;
+			return name;
+		}
+
+		// Returns a message explaining why the name can't be used for saving, or null if it's fine.
+		private static string CheckPresetName(string name)
+		{
+			if (string.IsNullOrWhiteSpace(name))
+				return "Type a name for the setup first.";
+			if (name == PresetBuiltIn)
+				return "'Built-in' is reserved for the original tool list. Choose another name.";
+			if (name == PresetLastUsed)
+				return "'Last used' is saved automatically when you press OK. Choose another name.";
+			if (name.Length > 60)
+				return "Use a name of 60 characters or fewer.";
+			if (name.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0 || name.StartsWith(".") || name.EndsWith("."))
+				return "The name can't contain \\ / : * ? \" < > | or start or end with a dot.";
+			return null;
+		}
+
+		private static bool PresetExists(string name)
+		{
+			return System.IO.File.Exists(PresetPath(name));
+		}
+
+		// The saved setup as a ';'-separated list, or null if there is no such setup.
+		private static string ReadPresetToolList(string name)
+		{
+			string path = PresetPath(name);
+			if (!System.IO.File.Exists(path))
+				return null;
+
+			List<string> names = new List<string>();
+			foreach (string line in System.IO.File.ReadAllLines(path))
+			{
+				string trimmed = line.Trim();
+				if (trimmed.Length > 0 && !trimmed.StartsWith("#"))
+					names.Add(trimmed);
+			}
+			return string.Join(ToolListSeparator.ToString(), names);
+		}
+
+		private static void WritePreset(string name, IList<string> typeNames)
+		{
+			List<string> lines = new List<string> { "# icPA - Drawing Toolbar saved setup: one drawing tool type per line, in toolbar order." };
+			lines.AddRange(typeNames);
+
+			lock (presetSync)
+			{
+				System.IO.Directory.CreateDirectory(PresetFolder);
+				System.IO.File.WriteAllLines(PresetPath(name), lines);
+
+				if (name == PresetDefault)
+					cachedStartupToolList = typeNames.Count > 0 ? string.Join(ToolListSeparator.ToString(), typeNames) : BuiltInToolList;
+			}
+		}
+
+		private static void DeletePresetFile(string name)
+		{
+			lock (presetSync)
+			{
+				System.IO.File.Delete(PresetPath(name));
+
+				if (name == PresetDefault)
+					cachedStartupToolList = null;
+			}
+		}
+
+		// Built-in first, then Default and Last used when they exist, then the named setups alphabetically.
+		private static List<string> ListPresetNames()
+		{
+			List<string> result = new List<string> { PresetBuiltIn };
+			if (!System.IO.Directory.Exists(PresetFolder))
+				return result;
+
+			List<string> names = System.IO.Directory.GetFiles(PresetFolder, "*" + PresetExtension)
+				.Select(p => NormalizePresetName(System.IO.Path.GetFileNameWithoutExtension(p)))
+				.Where(n => n.Length > 0 && n != PresetBuiltIn)
+				.ToList();
+
+			if (names.Contains(PresetDefault))
+				result.Add(PresetDefault);
+			if (names.Contains(PresetLastUsed))
+				result.Add(PresetLastUsed);
+
+			result.AddRange(names
+				.Where(n => n != PresetDefault && n != PresetLastUsed)
+				.OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase));
 
 			return result;
 		}
@@ -989,17 +1156,165 @@ namespace NinjaTrader.NinjaScript.Indicators.icPA
 			NinjaTrader.Gui.Tools.NTWindow window = new NinjaTrader.Gui.Tools.NTWindow
 			{
 				Caption					= "Configure drawing tools",
-				Width					= 600,
+				Width					= 640,
 				SizeToContent			= SizeToContent.Height,
 				WindowStartupLocation	= WindowStartupLocation.CenterOwner,
 				Owner					= Window.GetWindow(ChartControl)
 			};
+
+			// Saved setups: load one into the list, save the list under a name or as Default, or delete one.
+			ComboBox presetBox = new ComboBox
+			{
+				IsEditable	= true,
+				MinWidth	= 260,
+				Margin		= new Thickness(4),
+				ToolTip		= "Pick a saved setup to load or delete, or type a new name to save the list on the right"
+			};
+			TextBlock presetStatus = new TextBlock { Margin = new Thickness(4, 2, 4, 2), TextWrapping = TextWrapping.Wrap };
+
+			bool ConfirmPreset(string message)
+			{
+				return NinjaTrader.Gui.Tools.NTMessageBoxSimple.Show(window, message, "Saved setups", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+			}
+
+			void RefreshPresetNames(string select)
+			{
+				List<string> names;
+				try
+				{
+					names = ListPresetNames();
+				}
+				catch (Exception ex)
+				{
+					names				= new List<string> { PresetBuiltIn };
+					presetStatus.Text	= "Could not read the saved setups: " + ex.Message;
+				}
+				presetBox.ItemsSource	= names;
+				presetBox.Text			= select ?? string.Empty;
+			}
+
+			void LoadPreset()
+			{
+				string name = NormalizePresetName(presetBox.Text);
+				if (name.Length == 0)
+				{
+					presetStatus.Text = "Pick a saved setup to load.";
+					return;
+				}
+
+				string list;
+				try
+				{
+					list = name == PresetBuiltIn ? BuiltInToolList : ReadPresetToolList(name);
+				}
+				catch (Exception ex)
+				{
+					presetStatus.Text = string.Format("Could not load '{0}': {1}", name, ex.Message);
+					return;
+				}
+
+				if (list == null)
+				{
+					presetStatus.Text = string.Format("There is no saved setup named '{0}'.", name);
+					return;
+				}
+
+				int missing;
+				List<ToolInfo> tools = ParseToolList(list, catalog, out missing);
+				selected.Clear();
+				foreach (ToolInfo tool in tools)
+					selected.Add(tool);
+				RefillAvailable();
+
+				presetStatus.Text = string.Format("Loaded '{0}'. Press OK to apply it to this toolbar.{1}", name,
+					missing > 0 ? string.Format(" Skipped {0} tool{1} that {2} not installed.", missing, missing == 1 ? string.Empty : "s", missing == 1 ? "is" : "are") : string.Empty);
+			}
+
+			void SavePreset(string name)
+			{
+				name = NormalizePresetName(name);
+				string problem = CheckPresetName(name);
+				if (problem != null)
+				{
+					presetStatus.Text = problem;
+					return;
+				}
+				if (selected.Count == 0)
+				{
+					presetStatus.Text = "Add at least one tool to the list on the right before saving.";
+					return;
+				}
+
+				try
+				{
+					if (PresetExists(name) && !ConfirmPreset(string.Format("Replace the saved setup '{0}' with the current list?", name)))
+						return;
+
+					WritePreset(name, selected.Select(t => t.FullName).ToList());
+					RefreshPresetNames(name);
+					presetStatus.Text = name == PresetDefault
+						? "Saved as Default. Toolbars you add to a chart from now on start with this setup."
+						: string.Format("Saved '{0}'.", name);
+				}
+				catch (Exception ex)
+				{
+					presetStatus.Text = string.Format("Could not save '{0}': {1}", name, ex.Message);
+				}
+			}
+
+			void DeletePreset()
+			{
+				string name = NormalizePresetName(presetBox.Text);
+				if (name.Length == 0 || name == PresetBuiltIn)
+				{
+					presetStatus.Text = "Pick a saved setup to delete. The built-in list can't be deleted.";
+					return;
+				}
+
+				try
+				{
+					if (!PresetExists(name))
+					{
+						presetStatus.Text = string.Format("There is no saved setup named '{0}'.", name);
+						return;
+					}
+					if (!ConfirmPreset(string.Format("Delete the saved setup '{0}'? This cannot be undone.", name)))
+						return;
+
+					DeletePresetFile(name);
+					RefreshPresetNames(null);
+					presetStatus.Text = name == PresetDefault
+						? "Deleted Default. New toolbars start with the built-in tools again."
+						: string.Format("Deleted '{0}'.", name);
+				}
+				catch (Exception ex)
+				{
+					presetStatus.Text = string.Format("Could not delete '{0}': {1}", name, ex.Message);
+				}
+			}
+
+			StackPanel presetButtons = new StackPanel { Orientation = Orientation.Horizontal };
+			presetButtons.Children.Add(MakeButton("Load", LoadPreset));
+			presetButtons.Children.Add(MakeButton("Save", () => SavePreset(presetBox.Text)));
+			presetButtons.Children.Add(MakeButton("Save as default", () => SavePreset(PresetDefault)));
+			presetButtons.Children.Add(MakeButton("Delete", DeletePreset));
+
+			StackPanel presetPanel = new StackPanel();
+			presetPanel.Children.Add(presetBox);
+			presetPanel.Children.Add(presetButtons);
+			presetPanel.Children.Add(presetStatus);
+
+			GroupBox presetsGroup = new GroupBox { Header = "Saved setups", Content = presetPanel, Margin = new Thickness(0, 0, 0, 10), Padding = new Thickness(4) };
+
+			RefreshPresetNames(null);
+			presetStatus.Text = "Type a name and press Save to keep the list on the right, or pick a saved setup and press Load. Save as default sets the tools new toolbars start with.";
 
 			StackPanel okCancel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 8, 0, 0) };
 			okCancel.Children.Add(MakeButton("OK", () => window.DialogResult = true));
 			okCancel.Children.Add(MakeButton("Cancel", () => window.DialogResult = false));
 
 			Grid layout = new Grid { Margin = new Thickness(10) };
+			layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 			layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 			layout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 			layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -1016,20 +1331,26 @@ namespace NinjaTrader.NinjaScript.Indicators.icPA
 				layout.Children.Add(element);
 			}
 
-			Place(new TextBlock { Text = "Available tools", Margin = new Thickness(0, 0, 0, 4) }, 0, 0);
-			Place(new TextBlock { Text = "Shown on toolbar (in this order)", Margin = new Thickness(0, 0, 0, 4) }, 0, 2);
-			Place(availableList, 1, 0);
-			Place(addRemove, 1, 1);
-			Place(selectedList, 1, 2);
-			Place(upDown, 1, 3);
-			Place(okCancel, 2, 0, 4);
+			Place(presetsGroup, 0, 0, 4);
+			Place(new TextBlock { Text = "Available tools", Margin = new Thickness(0, 0, 0, 4) }, 1, 0);
+			Place(new TextBlock { Text = "Shown on toolbar (in this order)", Margin = new Thickness(0, 0, 0, 4) }, 1, 2);
+			Place(availableList, 2, 0);
+			Place(addRemove, 2, 1);
+			Place(selectedList, 2, 2);
+			Place(upDown, 2, 3);
+			Place(okCancel, 3, 0, 4);
 
 			window.Content = layout;
 
 			if (window.ShowDialog() == true)
 			{
-				ToolList = string.Join(ToolListSeparator.ToString(), selected.Select(t => t.FullName));
+				List<string> typeNames = selected.Select(t => t.FullName).ToList();
+				ToolList = string.Join(ToolListSeparator.ToString(), typeNames);
 				RefreshTools();
+
+				// Also kept as "Last used", so the list can be loaded again if a workspace ever comes back without it.
+				try { WritePreset(PresetLastUsed, typeNames); }
+				catch (Exception ex) { Print(string.Format("{0}: could not save the 'Last used' setup ({1})", Name, ex.Message)); }
 			}
 		}
 

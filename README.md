@@ -24,6 +24,7 @@ Watch the complete breakdown of parameters, price action context, and chart exam
 ## ⚡ Key Features
 
 - **Your tools, your order:** Right-click the grip and choose **Configure tools...** to pick any drawing tool from the chart's drawing tools menu (including third-party ones) and set the order they appear in. Click a button to start drawing.
+- **Saved setups:** Save your tool list under a name and load it on any chart, or save it as your Default so every toolbar you add starts with it. Setups are stored outside the workspace, and the last list you applied is always kept as "Last used".
 - **Docked or floating:** Dock the toolbar in the chart window's toolbar (shown only while its own chart tab is selected), or float it on the chart panel, drag it anywhere inside the panel, and drag it past the edge to move it to another panel.
 - **Hide/show and delete all drawings:** Optional buttons hide, then restore, all hand-made drawings on the chart, or delete them after a confirmation. Global drawings and drawings created by indicators or strategies are never touched, delete keeps locked drawings, and hide/show only restores the drawings it hid. The hidden state is saved with the workspace.
 - **PATS & Context Aligned:** Designed for Price Action principles (Mack / Thomas Wade) and disciplined futures execution: mark trend lines, channels and key levels without hunting through menus.
@@ -44,7 +45,7 @@ Watch the complete breakdown of parameters, price action context, and chart exam
 ## 📥 Installation Guide
 
 1. Head to the **[Releases](https://github.com/icPriceAction/drawing-toolbar/releases)** tab of this repository.
-2. Download the latest release `.zip` file (`icPriceAction_icPADrawingToolbar_v1.0.2.zip`).
+2. Download the latest release `.zip` file (`icPriceAction_icPADrawingToolbar_v1.1.0.zip`).
    - *Note: Do NOT extract or unzip the file.*
 3. Open **NinjaTrader 8**.
 4. In the Control Center, navigate to:
@@ -60,6 +61,18 @@ Watch the complete breakdown of parameters, price action context, and chart exam
 - **Double-click** the grip to open the indicator properties.
 - **Floating mode:** drag the grip to move the toolbar; drag it off the panel to move it to another panel.
 
+### Saved setups
+
+In the **Configure tools...** window, the **Saved setups** box lets you:
+
+- **Save:** type a name and press **Save** to keep the list on the right.
+- **Load:** pick a setup and press **Load**, then **OK** to apply it to this toolbar. **Built-in** restores the original tool list.
+- **Save as default:** toolbars you add to a chart from now on start with this list. Toolbars already on your charts keep their own list.
+- **Delete:** removes a saved setup.
+- **Last used:** saved automatically every time you press **OK**, so you can always get your latest list back.
+
+Setups are stored in `Documents\NinjaTrader 8\templates\icPA\DrawingToolbar`, outside your workspaces. A toolbar's current list is still saved with the workspace, so save your workspace after changing it.
+
 ---
 
 ## ⚙️ Parameters & Configuration
@@ -73,13 +86,13 @@ Watch the complete breakdown of parameters, price action context, and chart exam
 | Show hide/show drawings button | 1. General | Boolean | True | Adds a button that hides, then restores, all hand-made drawings on this chart. Global drawings are not affected. |
 | Show delete all drawings button | 1. General | Boolean | True | Adds a button that deletes all hand-made drawings on this chart after confirmation. Global and locked drawings are kept. |
 
-**Tools on the toolbar** are set in the **Configure tools...** window (right-click the grip), not in the properties panel. Default tools: Line, Ray, Extended Line, Horizontal Line, Vertical Line, Fibonacci Retracements, Fibonacci Extensions, Rectangle, Ellipse, Text.
+**Tools on the toolbar** are set in the **Configure tools...** window (right-click the grip), not in the properties panel. New toolbars start with your saved Default setup if you have one; otherwise with the built-in tools: Line, Ray, Extended Line, Horizontal Line, Vertical Line, Fibonacci Retracements, Fibonacci Extensions, Rectangle, Ellipse, Text.
 
 ---
 
 ## 📝 Changelog
 
-- **v1.0.2** (2026-11-03) - Initial public release. Cleaned and optimized by icPriceAction.
+- **v1.1.0** (2026-11-03) - Initial public release. Cleaned and optimized by icPriceAction. Adds saved tool setups (save, load, save as default, delete, automatic "Last used").
 - **v1.0.1** - Tool lists in "Configure tools..." scroll when long; the window sizes itself to its content.
 - **v1.0.0** - Drawings hidden by the toolbar are shown again when it is removed or the hide/show button is turned off; Segoe Fluent Icons with Segoe MDL2 fallback for action buttons; code cleanup.
 - **v0.3.1** - Delete confirmation states that deleting cannot be undone.
