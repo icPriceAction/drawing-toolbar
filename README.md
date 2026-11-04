@@ -2,12 +2,11 @@
 
 [![NinjaTrader 8](https://img.shields.io/badge/Platform-NinjaTrader%208-black.svg)](https://ninjatrader.com)
 [![License: Personal Use](https://img.shields.io/badge/License-Personal%20Use-6E6E6E.svg)](#license)
+[![Support: Buy Me a Coffee](https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/icpriceaction)
 [![YouTube Guide](https://img.shields.io/badge/YouTube-Watch%20Walkthrough-red.svg)](https://youtube.com/@icPriceAction)
 [![Website](https://img.shields.io/badge/Website-icpriceaction.com-111213.svg)](https://icpriceaction.com)
-[![Buy Me a Coffee](https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/icpriceaction)
-[![Prop Discounts](https://img.shields.io/badge/Prop%20Discounts-Code%20ICPAT-black.svg)](https://icpriceaction.com/prop-firms.html)
 
-A specialized Indicator engineered for Price Action day trading. It puts your chosen drawing tools one click away, in a toolbar that floats on the chart or docks in the chart window's own toolbar, with optional buttons to hide/show or delete all your hand-made drawings.
+A specialized Indicator engineered for trading. It puts your chosen drawing tools one click away, in a toolbar that floats on the chart or docks in the chart window's own toolbar, with optional buttons to hide/show or delete all your hand-made drawings.
 
 ---
 
@@ -21,14 +20,32 @@ Watch the complete breakdown of parameters, price action context, and chart exam
 
 ---
 
+## ☕ Support the Project
+
+All tools by **icPriceAction** are **100% free and open-source for personal trading use**. There are no paywalls, subscriptions, or locked features and there never will be!
+
+Developing, optimizing for zero latency on multiple charts/instruments, and maintaining documentation and releases takes a **considerable amount of personal time and ongoing effort**. 
+
+If this tool saves you screen time, improves your execution, or cleans up your charts, buying a coffee is the best way to support continued development:
+
+<p align="left">
+  <a href="https://buymeacoffee.com/icpriceaction" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="190">
+  </a>
+</p>
+
+> **[☕ Support Development on Buy Me a Coffee](https://buymeacoffee.com/icpriceaction)**
+
+---
+
 ## ⚡ Key Features
 
 - **Your tools, your order:** Right-click the grip and choose **Configure tools...** to pick any drawing tool from the chart's drawing tools menu (including third-party ones) and set the order they appear in. Click a button to start drawing.
 - **Saved setups:** Save your tool list under a name and load it on any chart, or save it as your Default so every toolbar you add starts with it. Setups are stored outside the workspace, and the last list you applied is always kept as "Last used".
 - **Docked or floating:** Dock the toolbar in the chart window's toolbar (shown only while its own chart tab is selected), or float it on the chart panel, drag it anywhere inside the panel, and drag it past the edge to move it to another panel.
 - **Hide/show and delete all drawings:** Optional buttons hide, then restore, all hand-made drawings on the chart, or delete them after a confirmation. Global drawings and drawings created by indicators or strategies are never touched, delete keeps locked drawings, and hide/show only restores the drawings it hid. The hidden state is saved with the workspace.
-- **PATS & Context Aligned:** Designed for Price Action principles (Mack / Thomas Wade) and disciplined futures execution: mark trend lines, channels and key levels without hunting through menus.
-- **Zero Chart Lag:** Native C# with no per-bar or per-frame work, so it adds no load to high-frequency 2000-tick ES/MES charts.
+- **PATS & Context Aligned:** Designed for Price Action principles and disciplined futures execution: mark trend lines, channels and key levels without hunting through menus.
+- **Zero Chart Lag:** Native C# with no per-bar or per-frame work, so it adds no load to high-frequency tick charts.
 - **Clean Visuals:** Uses NinjaTrader's own theme colors and icons, so it blends into your chart and toolbar without clutter.
 - **Fully Customizable:** Configure docking, offset, layout and the optional buttons via the native NT8 settings panel.
 
@@ -45,7 +62,7 @@ Watch the complete breakdown of parameters, price action context, and chart exam
 ## 📥 Installation Guide
 
 1. Head to the **[Releases](https://github.com/icPriceAction/drawing-toolbar/releases)** tab of this repository.
-2. Download the latest release `.zip` file (`icPriceAction_icPADrawingToolbar_v1.1.0.zip`).
+2. Download the latest release `.zip` file.
    - *Note: Do NOT extract or unzip the file.*
 3. Open **NinjaTrader 8**.
 4. In the Control Center, navigate to:
@@ -92,7 +109,7 @@ Setups are stored in `Documents\NinjaTrader 8\templates\icPA\DrawingToolbar`, ou
 
 ## 📝 Changelog
 
-- **v1.1.0** (2026-11-03) - Initial public release. Cleaned and optimized by icPriceAction. Adds saved tool setups (save, load, save as default, delete, automatic "Last used").
+- **v1.1.0** - Initial public release. Cleaned and optimized by icPriceAction. Adds saved tool setups (save, load, save as default, delete, automatic "Last used").
 - **v1.0.1** - Tool lists in "Configure tools..." scroll when long; the window sizes itself to its content.
 - **v1.0.0** - Drawings hidden by the toolbar are shown again when it is removed or the hide/show button is turned off; Segoe Fluent Icons with Segoe MDL2 fallback for action buttons; code cleanup.
 - **v0.3.1** - Delete confirmation states that deleting cannot be undone.
@@ -100,15 +117,6 @@ Setups are stored in `Documents\NinjaTrader 8\templates\icPA\DrawingToolbar`, ou
 - **v0.2.1** - Fixed a compile error in the theme resource helper.
 - **v0.2.0** - Rewrite; "Configure tools..." window to choose and order tools; safer tool loading and cleanup.
 - **v0.1.0** - Initial version: floating toolbar with optional docking in the chart window's toolbar.
-
----
-
-## ☕ Support the Project
-
-All tools provided by **icPriceAction** are 100% free and open-source for personal trading use. These tools, even though supported by AI, have taken considerable time to design, build, test and package. If these tools bring you value, consider supporting continued development:
-
-- **Prop Firm Traders:** Use discount code **`ICPAT`** at checkout across top futures prop evaluation firms ([View Active Discounts](https://icpriceaction.com/prop-firms.html)).
-- **Profitable Traders:** Send a one-time tip to support my continued support and time, server hosting and open-source updates via [Buy Me a Coffee](https://buymeacoffee.com/icpriceaction).
 
 ---
 

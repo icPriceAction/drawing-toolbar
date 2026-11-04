@@ -10,7 +10,6 @@
 // Repository:   https://github.com/icPriceAction/drawing-toolbar
 // YouTube:      https://youtube.com/@icPriceAction
 // Support:      https://buymeacoffee.com/icpriceaction
-// Prop Code:    ICPAT (Discounts: https://icpriceaction.com/prop-firms.html)
 //
 // License:      Free for personal trading use. Commercial resale, redistribution,
 //               or repackaging is strictly prohibited. See LICENSE in official repository.
@@ -20,17 +19,17 @@
 //               all hand-made drawings on the chart.
 //
 // Changelog:
-//   v1.1.0 (2026-11-03) - Initial public release. Cleaned and optimized by icPriceAction.
-//                       - New: saved tool setups in "Configure tools..." (load, save under a name, save as default, delete),
-//                         stored outside the workspace in Documents\NinjaTrader 8\templates\icPA\DrawingToolbar.
-//                       - New: toolbars added to a chart start with the setup saved as Default; pressing OK also keeps a "Last used" setup.
-//                       - Toolbar settings are now copied after NinjaTrader's own copy, so they always win when indicators are reloaded.
-//                       - Renamed to icPADrawingToolbar (icPA folder); settings grouped under "1. General".
-//                       - Fix: a saved hidden state is no longer re-applied while the hide/show button is turned off.
-//                       - Fix: all UI cleanup on removal now runs on the UI thread (no race with drag/resize handlers); mouse capture released.
-//                       - Errors from toolbar buttons are logged to the Output window instead of escaping to the UI thread.
-//                       - Drawing tool catalog is scanned once per instance instead of on every refresh.
-//                       - Replaced C# 8/9-only syntax with equivalent older syntax for wider compiler compatibility.
+//   v1.1.0 - Initial public release. Cleaned and optimized by icPriceAction.
+//          - New: saved tool setups in "Configure tools..." (load, save under a name, save as default, delete),
+//            stored outside the workspace in Documents\NinjaTrader 8\templates\icPA\DrawingToolbar.
+//          - New: toolbars added to a chart start with the setup saved as Default; pressing OK also keeps a "Last used" setup.
+//          - Toolbar settings are now copied after NinjaTrader's own copy, so they always win when indicators are reloaded.
+//          - Renamed to icPADrawingToolbar (icPA folder); settings grouped under "1. General".
+//          - Fix: a saved hidden state is no longer re-applied while the hide/show button is turned off.
+//          - Fix: all UI cleanup on removal now runs on the UI thread (no race with drag/resize handlers); mouse capture released.
+//          - Errors from toolbar buttons are logged to the Output window instead of escaping to the UI thread.
+//          - Drawing tool catalog is scanned once per instance instead of on every refresh.
+//          - Replaced C# 8/9-only syntax with equivalent older syntax for wider compiler compatibility.
 //   v1.0.1 - Tool lists in "Configure tools..." scroll when long; the window sizes itself to its content.
 //   v1.0.0 - Drawings hidden by the toolbar are shown again when it is removed or the hide/show button is turned off; Segoe Fluent Icons with Segoe MDL2 fallback for action buttons; code cleanup.
 //   v0.3.1 - Delete confirmation states that deleting cannot be undone.
@@ -116,7 +115,7 @@ namespace NinjaTrader.NinjaScript.Indicators.icPA
 				Name						= "icPA - Drawing Toolbar";
 				Description					= "Drawing tool toolbar that floats on the chart or docks in the chart window's toolbar. Right-click the grip to choose and order the drawing tools. Optional buttons hide/show or delete all hand-made drawings on the chart (global, locked and script-drawn drawings are never touched)."
 											+ "\r\nDeveloped by Istvan Cebrian | https://icpriceaction.com"
-											+ "\rSupport this free tool: https://buymeacoffee.com/icpriceaction | Prop Firm Discount Code: ICPAT (https://icpriceaction.com/prop-firms.html)";
+											+ "\rSupport this free tool: https://buymeacoffee.com/icpriceaction";
 				IsOverlay					= true;
 				IsChartOnly					= true;
 				DisplayInDataBox			= false;
